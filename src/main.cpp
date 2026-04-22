@@ -13,6 +13,12 @@ void setup()
 {
   Serial.begin(115200);
   connectWifi();
+
+  sendEmail(
+    RECIPIENT1,
+    "Hello",
+    "This is a test email"
+  );
 }
 
 void loop()
@@ -35,7 +41,7 @@ void connectWifi()
 void sendEmail(const char *recipient, const char *subject, const char *body)
 {
   ESP_Mail_Session session;
-  session.server.host_name = "smpt.gmail.com";
+  session.server.host_name = "smtp.gmail.com";
   session.server.port = 465;
   session.login.email = SENDER_EMAIL;
   session.login.password = SENDER_PASSWORD;
