@@ -7,16 +7,28 @@ SMTPSession smtp;
 
 // put function declarations here:
 void sendEmail(const char *, const char *, const char *);
+void connectWifi();
 
 void setup()
 {
-  // put your setup code here, to run once:
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  Serial.begin(115200);
+  connectWifi();
 }
 
 void loop()
 {
   // put your main code here, to run repeatedly:
+}
+
+void connectWifi()
+{
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  Serial.print("Connecting to WiFi");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("\nConnected!");
 }
 
 // put function definitions here:
