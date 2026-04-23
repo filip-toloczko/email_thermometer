@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include <string>
 #include <WiFi.h>
+#include <WebServer.h>
+#include <ESPmDNS.h>
 #include <ESP_Mail_Client.h>
 #include <DHT.h>
 #include <secrets.h>
@@ -12,21 +14,28 @@ using namespace std;
 
 SMTPSession smtp;
 DHT dht(DHT_PIN, DHT_TYPE);
+WebServer server(80);
 
-// put function declarations here:
+unsigned long lastReadTime = 0;
+unsigned long lastEmailTime = 0;
+
 void sendEmail(const char *recipient, const char *subject, const char *body);
 void connectWifi();
 void checkTemp();
+void handleRoot();
 
 void setup()
 {
   Serial.begin(115200);
   connectWifi();
+  MDNS.begin("fridge");
+  server.on("/", handleRoot);
   dht.begin();
 }
 
 void loop()
 {
+  server.handleClient();
   checkTemp();
 }
 
@@ -42,7 +51,6 @@ void connectWifi()
   Serial.println("\nConnected!");
 }
 
-// put function definitions here:
 void sendEmail(const char *recipient, const char *subject, const char *body)
 {
   ESP_Mail_Session session;
@@ -77,7 +85,8 @@ void sendEmail(const char *recipient, const char *subject, const char *body)
 
 void checkTemp()
 {
-  delay(2000);
+  if (millis() - lastReadTime < 2000) return;
+  lastReadTime = millis();
 
   float humidity = dht.readHumidity();
   float temperature = dht.readTemperature(true);
@@ -90,6 +99,9 @@ void checkTemp()
 
   if (temperature >= 40.0)
   {
+    if (millis() - lastEmailTime < 3600000) return; // only email once per hour
+    lastEmailTime = millis();
+
     String message = "WARNING: Fridge Temperature Below 40 °F\n";
     message += "Current Fridge Temperature: ";
     message += String(temperature);
@@ -98,6 +110,22 @@ void checkTemp()
     String subject = "WARNING: Garage Fridge Temperature Low";
 
     sendEmail(RECIPIENT1, subject.c_str(), message.c_str());
-    delay(3600000);
   }
+}
+
+void handleRoot()
+{
+  float temperature = dht.readTemperature(true);
+
+  String html = "<!DOCTYPE html><html>";
+  html += "<head><title>ESP32 Temperature</title>";
+  html += "<meta http-equiv='refresh' content='5'>"; 
+  html += "</head><body>";
+  html += "<h1>Fridge Temperature</h1>";
+  html += "<p>Temperature: ";
+  html += String(temperature);
+  html += " °F</p>";
+  html += "</body></html>";
+
+  server.send(200, "text/html", html);
 }
