@@ -99,7 +99,7 @@ void checkTemp()
 
   if (temperature >= 40.0)
   {
-    if (millis() - lastEmailTime < 3600000) return; // only email once per hour
+    if (millis() - lastEmailTime < 3600000) return;
     lastEmailTime = millis();
 
     String message = "WARNING: Fridge Temperature Below 40 °F\n";
@@ -108,8 +108,11 @@ void checkTemp()
     message += " °F";
 
     String subject = "WARNING: Garage Fridge Temperature Low";
-
-    sendEmail(RECIPIENT1, subject.c_str(), message.c_str());
+    
+    for (int i = 0; i < sizeof(RECIPIENTS); i++){
+      sendEmail(RECIPIENTS[i].c_str(), subject.c_str(), message.c_str());
+    }
+    
   }
 }
 
