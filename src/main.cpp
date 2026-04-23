@@ -98,5 +98,6 @@ void checkTemp()
     String subject = "WARNING: Garage Fridge Temperature Low";
 
     sendEmail(RECIPIENT1, subject.c_str(), message.c_str());
+    delay(3600000);
   }
 }
